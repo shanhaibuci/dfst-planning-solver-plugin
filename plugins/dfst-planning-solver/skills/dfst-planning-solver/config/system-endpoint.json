@@ -1,0 +1,4 @@
+{
+  "origin": "http://k8s-gateway-6bc7696dda-1998186347.ap-southeast-1.elb.amazonaws.com",
+  "mcp_path": "/mcp"
+}

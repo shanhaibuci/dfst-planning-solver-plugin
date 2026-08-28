@@ -1,0 +1,23 @@
+{
+  "name": "dfst-planning-solver",
+  "version": "0.1.0",
+  "description": "通过 DFST Gateway 分析规划场景、构建求解参数、提交任务并解释结果。",
+  "author": {
+    "name": "DFST",
+    "url": "https://github.com/shanhaibuci"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "DFST 场景求解",
+    "shortDescription": "连接 Gateway 完成规划场景求解",
+    "longDescription": "安装场景求解 Skill，并在首次使用时引导用户使用 Gateway PAT 配置和验证 MCP 连接。",
+    "developerName": "DFST",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": "使用 DFST 场景求解分析我的规划场景，并在创建任务前向我确认。"
+  },
+  "repository": "https://github.com/shanhaibuci/dfst-planning-solver-plugin"
+}

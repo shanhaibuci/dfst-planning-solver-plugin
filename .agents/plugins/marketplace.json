@@ -1,0 +1,20 @@
+{
+  "name": "dfst",
+  "interface": {
+    "displayName": "DFST Plugins"
+  },
+  "plugins": [
+    {
+      "name": "dfst-planning-solver",
+      "source": {
+        "source": "local",
+        "path": "./plugins/dfst-planning-solver"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DFST 场景求解"
+  short_description: "分析规划场景，提交求解并解释结果"
+  default_prompt: "使用 $dfst-planning-solver 先检查 Gateway MCP 接入，然后分析我的规划场景、构建参数、提交求解并解释结果。"
