@@ -1,6 +1,8 @@
 ---
 name: dfst-planning-solver
 description: Use DFST Gateway to configure solver access, turn routing, dispatch, scheduling, or resource-planning requirements into a validated solve request, submit and track the job, explain the result, and generate local data-integration tools. Use for DFST planning scenarios and existing solver jobs; do not use for implementing solver algorithms.
+metadata:
+  version: "1.0.1"
 ---
 
 # DFST Planning Solver
