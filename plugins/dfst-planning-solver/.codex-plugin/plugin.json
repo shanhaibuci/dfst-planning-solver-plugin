@@ -1,6 +1,6 @@
 {
   "name": "dfst-planning-solver",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "通过 DFST Gateway 分析规划场景、构建求解参数、提交任务并解释结果。",
   "author": {
     "name": "DFST",
