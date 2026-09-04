@@ -7,10 +7,11 @@
     "url": "https://github.com/shanhaibuci"
   },
   "skills": "./skills/",
+  "apps": "./.app.json",
   "interface": {
     "displayName": "DFST 场景求解",
     "shortDescription": "连接 Gateway 完成规划场景求解",
-    "longDescription": "安装场景求解 Skill，并在首次使用时引导用户使用 Gateway PAT 配置和验证 MCP 连接。",
+    "longDescription": "将场景求解 Skill 与 DFST Gateway MCP 连接一并安装；ChatGPT 使用 Logto OAuth，Codex 本地兼容 PAT。",
     "developerName": "DFST",
     "category": "Productivity",
     "capabilities": [

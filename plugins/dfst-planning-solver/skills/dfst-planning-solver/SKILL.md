@@ -14,7 +14,7 @@ metadata:
 ## 全局规则
 
 - 跟随用户语言；API 字段、错误码、枚举和 tool name 保持原值。
-- 不要求用户在对话中粘贴 PAT，不把 PAT、密码或数据库凭证写入仓库、命令参数、示例或日志。VS Code 兼容配置只允许经用户明确授权后，由内置脚本写入用户级 Codex 配置。
+- ChatGPT 中优先使用Plugin绑定的Gateway MCP连接和Logto OAuth，不要求或配置PAT。仅Codex CLI/IDE兼容路线使用Gateway PAT；不得要求用户在对话中粘贴PAT，也不得把PAT、密码或数据库凭证写入仓库、命令参数、示例或日志。VS Code兼容配置只允许经用户明确授权后，由内置脚本写入用户级Codex配置。
 - 优先收集脱敏结构和小样本，不要求上传完整生产数据。
 - 不访问管理员接口、Registry、Git、Gateway 数据库、对象存储内部地址、引擎实例、最终引擎请求归档或完整结果文件。
 - 不保存或声称 Gateway 保存了 `request_payload` 原文。只在当前会话或用户明确指定的本地文件中维护草稿。
@@ -26,19 +26,19 @@ metadata:
 任一需要 Gateway 的路线在当前会话先检查一次：
 
 1. 先读取 `config/system-endpoint.json`；其 `origin` 是当前 Skill 对接系统的唯一根地址，MCP 和后续页面地址只能从该配置派生。不得从项目 `.env`、用户输入或通用 URL 参数覆盖该地址。
-2. `gateway.*` 是本文档使用的逻辑 tool name，不是 Codex 延迟工具目录中的运行时名称。即使首轮工具列表未直接展示 Gateway，也必须先从 `ALL_TOOLS` 按 `mcp__gateway__` 前缀发现延迟 MCP tools；不得用 `startsWith("gateway.")` 判断 tools 不可见。发现后调用 `mcp__gateway__gateway_image_versions_list_available` 只读验证；成功后记录当前会话已连接，静默进入用户原始意图。
-3. 只有正确查询延迟工具目录仍未发现 `mcp__gateway__*`，或已发现但只读调用失败时，才读取 [Gateway 接入](references/gateway-access.md)，按当前客户端表面进入 IDE 或 CLI 配置路线。不输出 PAT 值。
+2. `gateway.*`是本文档使用的逻辑tool name，不保证等于客户端运行时名称。ChatGPT中先使用本Plugin通过`.app.json`绑定的DFST MCP连接，从该连接的工具目录匹配并调用`gateway.image_versions.list_available`完成只读验证；认证由ChatGPT与Logto OAuth处理，不查询`mcp__gateway__`前缀、不读取本地`.env`、不进入PAT配置。连接尚未授权时只引导用户连接当前Plugin。成功后记录当前会话已连接，静默进入用户原始意图。
+3. 只有当前表面是Codex CLI/IDE时，才从`ALL_TOOLS`按`mcp__gateway__`前缀发现延迟MCP tools；不得用 `startsWith("gateway.")` 判断 tools 不可见。发现后调用`mcp__gateway__gateway_image_versions_list_available`只读验证。正确查询后仍未发现，或已发现但只读调用失败时，才读取[Gateway 接入](references/gateway-access.md)并进入对应Codex配置路线，不输出PAT值。
 4. **VS Code Codex IDE**：先运行内置 `scripts/configure_codex_gateway_mcp.py status`；项目 `.env` 有 PAT 时，再运行同一脚本的 `verify`，向统一系统端点配置派生的 Gateway MCP 地址执行无业务数据的 `initialize`。`invalid_pat` 必须提示 PAT 无效或已过期并引导用户在用户中心重新创建 `gateway:api` PAT，不执行 `apply`，不提示重试或重启；其他服务器验证错误也按返回状态处理。只有 `authenticated` 才继续：若用户级 Gateway MCP 静态 header 未就绪，只用一段简短文字说明将把 PAT 明文存入本机 Codex 用户配置、完成后需重启扩展，并询问是否继续。不展示配置路径、TOML 字段、header 细节、文件权限或修复步骤。取得用户明确授权后，由 Agent 执行同一脚本的 `apply`。若配置完整、当前会话未执行 `apply` 且首次按 `mcp__gateway__` 查询仍不可见，按 MCP 冷启动处理，只请求用户在原聊天发送一次“重试”；用户重试时必须先重复同一延迟目录发现、PAT 验证和只读验证，第二次正确查询仍不可见才提示 **Restart extension**。
 5. **Codex CLI**：继续使用由 `config/system-endpoint.json` 的 `origin` 和 `mcp_path` 派生的 URL，并使用 `bearer_token_env_var=GATEWAY_MCP_PAT`；由 Agent 准备自动加载 `.env` 的启动方式，不让用户手动执行 `source` / `export`。
 6. 任何 MCP 配置写入、替换或删除都必须先展示变更摘要并取得用户明确授权。配置正确时不重复写入。IDE 仅在 PAT 已通过服务器验证后写入配置，完成后说明本地配置已更新且 PAT 已验证，再提示在 MCP 设置中点击 **Restart extension** 并返回原聊天；CLI 通过 `codex resume` 续接原会话。两种表面都不要让用户重新描述业务需求。只读 tool 成功后静默继续原始意图，不输出接入报告，也不得把“工具已就绪”描述为“已重连”。
 
-Skill 不从 `.env` 读取 MCP 地址。系统根地址只由 `config/system-endpoint.json` 定义，地址派生和客户端配置规则由接入参考说明。PAT 只能由内置脚本从项目 `.env` 在进程内读取；IDE 可在明确授权后定向写入用户级静态 header，CLI 通过环境变量传递。
+Skill不从`.env`读取MCP地址。系统根地址只由`config/system-endpoint.json`定义，地址派生和客户端配置规则由接入参考说明。ChatGPT使用Plugin绑定连接和Logto OAuth；PAT只属于Codex兼容路线，只能由内置脚本从项目`.env`在进程内读取，IDE可在明确授权后定向写入用户级静态header，CLI通过环境变量传递。
 
 ## 先路由意图
 
 识别当前意图并只进入需要的路线：
 
-1. **首次接入或接入修复**：读取 [Gateway 接入](references/gateway-access.md)，检查并指导注册、PAT、MCP 配置、客户端重启和只读连接验证。连接成功前不收集生产业务数据。
+1. **首次接入或接入修复**：读取[Gateway 接入](references/gateway-access.md)。ChatGPT检查Plugin绑定连接及Logto OAuth；Codex CLI/IDE检查PAT、MCP配置、客户端重启和只读连接验证。连接成功前不收集生产业务数据。
 2. **新建场景求解**：依次执行场景分析、参数构建、任务执行和结果解释。
 3. **日常数据接入**：先完成场景分析和参数映射，再读取 [日常数据接入](references/data-integration.md) 在用户工程生成转换工具。
 4. **已有任务查询**：取得 `job_id` 后直接读取 [任务执行](references/job-execution.md) 查询；成功任务再进入结果解释。

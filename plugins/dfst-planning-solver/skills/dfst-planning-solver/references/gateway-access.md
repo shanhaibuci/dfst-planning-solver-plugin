@@ -15,13 +15,15 @@ Skill 对接系统的地址只在 `../config/system-endpoint.json` 配置一次�
 | 用户中心 | `{origin}/static/index.html#/account` |
 | MCP 接入页 | `{origin}/static/index.html#/mcp` |
 
-Skill 不从 `.env`、命令行参数或会话输入读取或覆盖 MCP URL。`agents/openai.yaml` 不声明 MCP dependency，避免市场安装时只生成 URL 的半成品配置；完整 MCP 配置由下面的接入工作流按客户端表面写入。
+Skill不从`.env`、命令行参数或会话输入读取或覆盖MCP URL。ChatGPT安装完整Plugin时，插件根目录`.app.json`把Skill绑定到已注册的DFST Gateway MCP连接，ChatGPT通过Logto OAuth取得当前用户访问凭证，不使用本页的PAT配置流程。`agents/openai.yaml`不重复声明MCP dependency。
+
+Codex CLI/IDE只安装或加载Skill、没有取得上述ChatGPT托管连接时，继续使用本页后续PAT兼容路线；二者不得混用，也不得要求ChatGPT用户创建PAT。
 
 ## 默认行为：正常时静默继续
 
 只在配置缺失、配置错误、PAT 未加载、认证失败或网络不可达时提示用户。配置完整并且只读 Gateway tool 成功时，不输出接入报告，直接继续用户原始任务。
 
-1. **先发现延迟 tools**：`gateway.image_versions.list_available` 等是逻辑名称。Codex 可能不在首轮工具列表直接展示可选 MCP tools，而只在 `ALL_TOOLS` 中提供规范化运行时名称。必须先按 `mcp__gateway__` 前缀查询 `ALL_TOOLS`；不得用 `startsWith("gateway.")` 查询运行时目录，也不得仅凭首轮静态列表缺少 `gateway.*` 判断 tools 不可见。
+1. **先发现延迟 tools**：`gateway.image_versions.list_available`等是逻辑名称。ChatGPT从Plugin绑定的DFST MCP连接中发现并调用对应tool；未授权时引导用户连接当前Plugin，不进入PAT流程。Codex可能不在首轮工具列表直接展示可选MCP tools，而只在`ALL_TOOLS`中提供规范化运行时名称；只有Codex表面才按`mcp__gateway__`前缀查询`ALL_TOOLS`，不得用`startsWith("gateway.")`查询运行时目录，也不得仅凭首轮静态列表缺少`gateway.*`判断tools不可见。
 2. **tools 已发现**：优先调用 `mcp__gateway__gateway_image_versions_list_available`（逻辑名称 `gateway.image_versions.list_available`）作为只读验证。成功后静默继续，不输出“已重连”或其他接入报告。
 3. **tools 确实不可见**：只有按 `mcp__gateway__` 正确查询延迟工具目录仍无结果，才识别当前是 VS Code Codex IDE 还是 Codex CLI，然后只执行对应路线。
 4. **VS Code Codex IDE**：运行 `configure_codex_gateway_mcp.py status`，项目 `.env` 有 PAT 时紧接着运行 `verify`。`verify` 使用 `system-endpoint.json` 派生的受信 Gateway MCP URL 发送无业务数据的 `initialize`，只返回归一化状态；不要求用户运行终端命令。只有 `authenticated` 才继续本地配置或冷启动判断。状态完整、PAT 已验证、当前会话未执行 `apply` 且首次正确查询仍不可见时，才视为可能的 MCP 冷启动竞态，只请求用户在当前聊天发送一次“重试”，不提示重启扩展。下一轮必须先再次按 `mcp__gateway__` 查询并重新运行 `verify`；发现后执行只读验证并继续原任务，第二次正确查询仍不可见时才提示 **Restart extension**。
